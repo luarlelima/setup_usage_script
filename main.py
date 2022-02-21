@@ -2,6 +2,7 @@ import psutil
 import sys
 import time
 import configparser
+from datetime import datetime
 
 import winapps
 from ctypes import Structure, windll, c_uint, sizeof, byref
@@ -70,11 +71,18 @@ process_list = process_list_generator()
 
 # publish results
 def publish_setup_status(name, status):
-    print('')
-    print(f'Setup name: {name}')
-    print(f'Setup status: {status}')
-    print('')
-    time.sleep(1)
+    # datetime
+    print_date = datetime.today().strftime('%Y-%m-%d')
+    print_time = datetime.today().strftime('%H:%M:%S')
+
+    # open file
+    with open('setup_usage.dat', 'a+') as file:
+        file.write(f'Setup name: {name}\t'
+                   f'Setup status: {status}\t'
+                   f'Date: {print_date}\t'
+                   f'Time: {print_time}\t')
+    print('Setup status written to setup_usage.dat file.')
+    time.sleep(2)
     sys.exit(0)
 
 
@@ -104,6 +112,7 @@ def connection_counter(process_name, port_limit):
             port_count += 1
             if port_count > port_limit:
                 return True
+
 
 # Remote Testing check
 if connection_counter('remoting_host.exe', 7):
@@ -171,7 +180,6 @@ def check_connection(source_process_name, destination_process_name,
 
 # check for IDLE setup
 def idle_time_check():
-
     def get_idle_duration():
 
         class LastInputInfo(Structure):
@@ -233,8 +241,8 @@ elif setup_vendor(installed_apps, 'Anite Automation', 'Anite Licensing', 'Keysig
 elif setup_vendor(installed_apps, 'R&S CMW1'):
     vendor = 'rohde-schwarz'
 
-    # check for Rohde-Schwarz test
-    def rohde_schwarz_contest_instance_counter():
+
+    def rohde_schwarz_contest_instance_counter():  # check for Rohde-Schwarz test
         count = 0
         for process in process_list:
             if process['name'] == 'RohdeSchwarz.Contest.exe':
@@ -243,11 +251,13 @@ elif setup_vendor(installed_apps, 'R&S CMW1'):
                         count += 1
             return count
 
+
     rohde_schwarz_contest_instances = rohde_schwarz_contest_instance_counter()
     rohde_schwarz_test_running = rohde_schwarz_contest_instances >= 3
 
     # check for automated test
-    rohde_schwarz_automation = check_connection('RohdeSchwarz.Contest.exe', 'AutoMgr.exe', process_port=4754)
+    rohde_schwarz_automation = check_connection('RohdeSchwarz.Contest.exe', 'AutoMgr.exe',
+                                                process_list, process_port=4754)
     print('Setup identified as: Rohde-Schwarz.')
 
     if rohde_schwarz_test_running:
@@ -257,7 +267,6 @@ elif setup_vendor(installed_apps, 'R&S CMW1'):
         else:
             print('Rohde-Schwarz setup performing manual testing. Reporting... ')
             publish_setup_status(vendor, 'manual')
-
 
 # Vendor check
 if vendor not in ['anritsu', 'keysight', 'rohde-schwarz', 'intel']:
