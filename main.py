@@ -70,10 +70,10 @@ process_list = process_list_generator()
 
 # publish results
 def publish_setup_status(name, status):
-    print('################################################################')
+    print('')
     print(f'Setup name: {name}')
     print(f'Setup status: {status}')
-    print('################################################################')
+    print('')
     time.sleep(1)
     sys.exit(0)
 
@@ -96,19 +96,20 @@ def vendor_support_checker():
 vendor_support_checker()
 
 
-# Remote Testing
-def remote_desktop_checker():
-    chrome_remote_desktop_pids = 0
+# Connection counter
+def connection_counter(process_name, port_limit):
+    port_count = 0
     for process in process_list:
-        if process["name"] == "remoting_host.exe":  # check for Chrome Remote Desktop/Remote Assistance active session
-            chrome_remote_desktop_pids += 1
-            if chrome_remote_desktop_pids > 7:
-                print("Chrome Remote Desktop session is active - reporting 'Remote Test' status...")
-                time.sleep(2)
-                publish_setup_status(setup_name, 'remote_testing')
+        if process["name"] == process_name:  # check for process active session
+            port_count += 1
+            if port_count > port_limit:
+                return True
 
-
-remote_desktop_checker()
+# Remote Testing check
+if connection_counter('remoting_host.exe', 7):
+    print("Chrome Remote Desktop session is active - reporting 'Remote Test' status...")
+    time.sleep(2)
+    publish_setup_status(setup_name, 'remote_testing')
 
 
 # automation / manual
@@ -199,7 +200,14 @@ print('Identifying current setup... ', end='')
 if setup_vendor(installed_apps, 'Rapid Test Designer', 'Common Interface Driver'):
     vendor = 'anritsu'
     print('Setup identified as: Anritsu.')
-    pass
+
+    # check for Anritsu (automated) test
+    print('Checking for test in Anritsu... ')
+    anritsu_automation = connection_counter('java.exe', 6)
+
+    if anritsu_automation:
+        print('Anritsu setup performing automated testing. Reporting... ')
+        publish_setup_status(vendor, 'automation')
 
 # Keysight setup check ########
 elif setup_vendor(installed_apps, 'Anite Automation', 'Anite Licensing', 'Keysight Core', 'Keysight SAS'):
@@ -250,9 +258,6 @@ elif setup_vendor(installed_apps, 'R&S CMW1'):
             print('Rohde-Schwarz setup performing manual testing. Reporting... ')
             publish_setup_status(vendor, 'manual')
 
-elif setup_vendor(installed_apps, 'Intel'):  # dummy
-    vendor = 'intel'
-    print('Setup identified as: Dummy.')
 
 # Vendor check
 if vendor not in ['anritsu', 'keysight', 'rohde-schwarz', 'intel']:
