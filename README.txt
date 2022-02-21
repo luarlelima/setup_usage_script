@@ -1,5 +1,10 @@
 ### Setup Usage ###
 
+Required libraries
+
+psutil
+winapps
+
 Setup states criteria
 
     Powered off
