@@ -80,7 +80,8 @@ def publish_setup_status(name, status):
         file.write(f'Setup name: {name}\t'
                    f'Setup status: {status}\t'
                    f'Date: {print_date}\t'
-                   f'Time: {print_time}\t')
+                   f'Time: {print_time}\t'
+                   '\n')
     print('Setup status written to setup_usage.dat file.')
     time.sleep(2)
     sys.exit(0)
@@ -271,6 +272,7 @@ elif setup_vendor(installed_apps, 'R&S CMW1'):
 # Vendor check
 if vendor not in ['anritsu', 'keysight', 'rohde-schwarz', 'intel']:
     print("Unrecognized setup")
+    publish_setup_status(setup_name, 'unrecognized setup')
     sys.exit(1)
 
 # Idle time check

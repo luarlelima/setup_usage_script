@@ -11,7 +11,7 @@ while True:
         print(f"Running {file_path} script...")
         subprocess.run(["pythonw", f"{file_path}"])
         time.sleep(2)
-        seconds = 10
+        seconds = 300
     except SystemExit:
         print("Ignoring SystemExit...")
     while True:
