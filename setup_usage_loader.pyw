@@ -3,7 +3,7 @@ import time
 import subprocess
 import os
 
-file_name = 'main.py'
+file_name = 'setup_usage.py'
 
 while True:
     try:

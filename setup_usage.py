@@ -3,9 +3,14 @@ import sys
 import time
 import configparser
 from datetime import datetime
+import requests
 
 import winapps
 from ctypes import Structure, windll, c_uint, sizeof, byref
+
+# config file setup
+config = configparser.ConfigParser()
+config.read('setup_usage.ini')
 
 # get list of installed apps
 print('Generating list of installed apps... ', end='')
@@ -75,7 +80,7 @@ def publish_setup_status(name, status):
     print_date = datetime.today().strftime('%Y-%m-%d')
     print_time = datetime.today().strftime('%H:%M:%S')
 
-    # open file
+    # save into file for testing purposes
     with open('setup_usage.dat', 'a+') as file:
         file.write(f'Setup name: {name}\t'
                    f'Setup status: {status}\t'
@@ -83,13 +88,25 @@ def publish_setup_status(name, status):
                    f'Time: {print_time}\t'
                    '\n')
     print('Setup status written to setup_usage.dat file.')
+
+    # publish into remote API
+    # get request domain URL from ini
+    api_url = config['setup_information']['api']
+    full_url = api_url + f'setupName={name}&setupStatus={status}'
+    print(f'API request URL: {full_url}')
+    response = requests.get(full_url)
+    if response.status_code == 200:
+        print('Request successful.')
+    else:
+        print('Request failed.')
+
+    # generate request from parameters
+
     time.sleep(2)
     sys.exit(0)
 
 
 # get equipment name
-config = configparser.ConfigParser()
-config.read('setup_usage.ini')
 setup_name = config['setup_information']['setup_name']
 
 
@@ -272,7 +289,7 @@ elif setup_vendor(installed_apps, 'R&S CMW1'):
 # Vendor check
 if vendor not in ['anritsu', 'keysight', 'rohde-schwarz', 'intel']:
     print("Unrecognized setup")
-    publish_setup_status(setup_name, 'unrecognized setup')
+    publish_setup_status(setup_name, 'unrecognized_setup')
     sys.exit(1)
 
 # Idle time check
@@ -280,4 +297,4 @@ if idle_time_check():
     publish_setup_status(setup_name, 'idle')
 
 else:
-    publish_setup_status(setup_name, 'local support')
+    publish_setup_status(setup_name, 'local_support')
