@@ -2,8 +2,14 @@ import sys
 import time
 import subprocess
 import os
+import configparser
 
-file_name = 'setup_usage.py'
+# config file setup
+config = configparser.ConfigParser()
+config.read('setup_usage.ini')
+
+#
+file_name = config['setup_information']['setup_usage_script_path']
 
 while True:
     try:
@@ -11,7 +17,7 @@ while True:
         print(f"Running {file_path} script...")
         subprocess.run(["pythonw", f"{file_path}"])
         time.sleep(2)
-        seconds = 300
+        seconds = int(config['setup_information']['script_loop_time_seconds'])
     except SystemExit:
         print("Ignoring SystemExit...")
     while True:
