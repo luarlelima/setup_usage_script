@@ -293,7 +293,7 @@ elif setup_vendor(installed_apps, 'R&S CMW1'):
             publish_setup_status(vendor, 'manual')
 
 # Vendor check
-if vendor not in ['anritsu', 'keysight', 'rohde-schwarz', 'intel']:
+if vendor not in ['anritsu', 'keysight', 'rohde-schwarz']:
     print("Unrecognized setup")
     publish_setup_status(setup_name, 'unrecognized_setup')
     sys.exit(1)
