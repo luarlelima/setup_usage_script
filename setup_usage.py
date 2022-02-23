@@ -1,12 +1,14 @@
-import psutil
 import sys
 import time
 import configparser
 from datetime import datetime
-import requests
-
-import winapps
 from ctypes import Structure, windll, c_uint, sizeof, byref
+import traceback
+
+import requests
+import psutil
+import winapps
+
 
 # config file setup
 config = configparser.ConfigParser()
@@ -94,11 +96,15 @@ def publish_setup_status(name, status):
     api_url = config['setup_information']['api']
     full_url = api_url + f'setupName={name}&setupStatus={status}'
     print(f'API request URL: {full_url}')
-    response = requests.get(full_url)
-    if response.status_code == 200:
-        print('Request successful.')
-    else:
+
+    try:
+        response = requests.get(full_url)
+        if response.status_code == 200:
+            print('Request successful.')
+    except requests.exceptions.ConnectionError as error_message:
         print('Request failed.')
+        print(error_message)
+        traceback.print_exc()
 
     # generate request from parameters
 
