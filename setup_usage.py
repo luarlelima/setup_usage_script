@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import configparser
@@ -113,7 +114,7 @@ def publish_setup_status(name, status):
 
 
 # get equipment name
-setup_name = config['setup_information']['setup_name']
+setup_name = os.getenv('SETUP_NAME')
 
 
 # Vendor Support
