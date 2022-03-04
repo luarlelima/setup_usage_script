@@ -8,7 +8,8 @@ import configparser
 config = configparser.ConfigParser()
 config.read('setup_usage.ini')
 
-#
+# read config file from same directory
+config.read(os.path.join(os.path.dirname(__file__), 'setup_usage.ini'))
 file_name = config['setup_information']['setup_usage_script_path']
 
 while True:

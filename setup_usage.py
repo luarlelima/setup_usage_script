@@ -13,7 +13,9 @@ import winapps
 
 # config file setup
 config = configparser.ConfigParser()
-config.read('setup_usage.ini')
+# read config file from same directory
+config.read(os.path.join(os.path.dirname(__file__), 'setup_usage.ini'))
+
 
 # get list of installed apps
 print('Generating list of installed apps... ', end='')
