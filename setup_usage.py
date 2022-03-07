@@ -149,31 +149,6 @@ if connection_counter('remoting_host.exe', 7):
 
 
 # automation / manual
-# identify setup
-
-def setup_vendor(installed_apps_list, *args):
-    # anritsu_apps_list = ['Rapid Test Designer']
-    # keysight_apps_list = ['Keysight']
-    # rohde_schwarz_apps_list = ['R&S CMW']
-
-    apps_list = []
-    for i in args:
-        apps_list.append(i)
-
-    matched_apps_list = []
-    for j in apps_list:
-        for app in installed_apps_list:
-            if str(app.name).startswith(j):
-                matched_apps_list.append(True)
-                break
-            else:
-                continue
-
-    if len(apps_list) == len(matched_apps_list):
-        return True
-    else:
-        return False
-
 
 def check_connection(source_process_name, destination_process_name,
                      process_iterable, connection_status='ESTABLISHED',
@@ -227,13 +202,9 @@ def idle_time_check():
         return False
 
 
-# vendor variable
-vendor = ''
-print('Identifying current setup... ', end='')
 
 # Anritsu setup check ########
-if setup_vendor(installed_apps, 'Rapid Test Designer', 'Common Interface Driver'):
-    vendor = 'anritsu'
+if 'Anritsu' in setup_name:
     print('Setup identified as: Anritsu.')
 
     # check for Anritsu (automated) test
@@ -242,11 +213,10 @@ if setup_vendor(installed_apps, 'Rapid Test Designer', 'Common Interface Driver'
 
     if anritsu_automation:
         print('Anritsu setup performing automated testing. Reporting... ')
-        publish_setup_status(vendor, 'automation')
+        publish_setup_status(setup_name, 'automation')
 
 # Keysight setup check ########
-elif setup_vendor(installed_apps, 'Anite Automation', 'Anite Licensing', 'Keysight Core', 'Keysight SAS'):
-    vendor = 'keysight'
+elif 'Keysight' in setup_name:
     print('Setup identified as: Keysight.')
 
     # check for Keysight test
@@ -259,15 +229,14 @@ elif setup_vendor(installed_apps, 'Anite Automation', 'Anite Licensing', 'Keysig
     if keysight_test_running:
         if keysight_automation:
             print('Keysight setup performing automated testing. Reporting... ')
-            publish_setup_status(vendor, 'automation')
+            publish_setup_status(setup_name, 'automation')
         else:
             print('Keysight setup performing manual testing. Reporting... ')
-            publish_setup_status(vendor, 'manual')
+            publish_setup_status(setup_name, 'manual')
 
 # Rohde-Schwarz check ########
-elif setup_vendor(installed_apps, 'R&S CMW1'):
-    vendor = 'rohde-schwarz'
-
+elif 'RS' in setup_name:
+    print('Setup identified as: Rohde-Schwarz.')
 
     def rohde_schwarz_contest_instance_counter():  # check for Rohde-Schwarz test
         count = 0
@@ -285,18 +254,18 @@ elif setup_vendor(installed_apps, 'R&S CMW1'):
     # check for automated test
     rohde_schwarz_automation = check_connection('RohdeSchwarz.Contest.exe', 'AutoMgr.exe',
                                                 process_list, process_port=4754)
-    print('Setup identified as: Rohde-Schwarz.')
+
 
     if rohde_schwarz_test_running:
         if rohde_schwarz_automation:
             print('Rohde-Schwarz setup performing automated testing. Reporting... ')
-            publish_setup_status(vendor, 'automation')
+            publish_setup_status(setup_name, 'automation')
         else:
             print('Rohde-Schwarz setup performing manual testing. Reporting... ')
-            publish_setup_status(vendor, 'manual')
+            publish_setup_status(setup_name, 'manual')
 
 # Vendor check
-if vendor not in ['anritsu', 'keysight', 'rohde-schwarz']:
+else:
     print("Unrecognized setup")
     publish_setup_status(setup_name, 'unrecognized_setup')
     sys.exit(1)
