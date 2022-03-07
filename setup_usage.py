@@ -10,12 +10,10 @@ import requests
 import psutil
 import winapps
 
-
 # config file setup
 config = configparser.ConfigParser()
 # read config file from same directory
 config.read(os.path.join(os.path.dirname(__file__), 'setup_usage.ini'))
-
 
 # get list of installed apps
 print('Generating list of installed apps... ', end='')
@@ -202,7 +200,6 @@ def idle_time_check():
         return False
 
 
-
 # Anritsu setup check ########
 if 'Anritsu' in setup_name:
     print('Setup identified as: Anritsu.')
@@ -238,6 +235,7 @@ elif 'Keysight' in setup_name:
 elif 'RS' in setup_name:
     print('Setup identified as: Rohde-Schwarz.')
 
+
     def rohde_schwarz_contest_instance_counter():  # check for Rohde-Schwarz test
         count = 0
         for process in process_list:
@@ -254,7 +252,6 @@ elif 'RS' in setup_name:
     # check for automated test
     rohde_schwarz_automation = check_connection('RohdeSchwarz.Contest.exe', 'AutoMgr.exe',
                                                 process_list, process_port=4754)
-
 
     if rohde_schwarz_test_running:
         if rohde_schwarz_automation:
