@@ -268,8 +268,9 @@ else:
     sys.exit(1)
 
 # Idle time check
+# TODO: update "manual" test condition evaluation criteria, remove "local support" condition
 if idle_time_check():
     publish_setup_status(setup_name, 'idle')
 
 else:
-    publish_setup_status(setup_name, 'local_support')
+    publish_setup_status(setup_name, 'manual')
