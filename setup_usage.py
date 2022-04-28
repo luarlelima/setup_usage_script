@@ -3,6 +3,7 @@ import sys
 import time
 import configparser
 from datetime import datetime
+from datetime import time as Time
 from ctypes import Structure, windll, c_uint, sizeof, byref
 import traceback
 
@@ -267,10 +268,16 @@ else:
     publish_setup_status(setup_name, 'unrecognized_setup')
     sys.exit(1)
 
-# Idle time check
-# TODO: update "manual" test condition evaluation criteria, remove "local support" condition
-if idle_time_check():
-    publish_setup_status(setup_name, 'idle')
+# Idle check - do not send "manual" outside working hours
+if not idle_time_check():
+    # get current time
+    current_time = datetime.now().time()
+    # if current time between 0:00 and 6:00, report idle
+    late_night = Time(0) < current_time < Time(6)
+    small_hours = Time(22) < current_time < Time(23,59,59)
+    if late_night or small_hours:
+        pass
+    else:
+        publish_setup_status(setup_name, 'manual')
 
-else:
-    publish_setup_status(setup_name, 'manual')
+publish_setup_status(setup_name, 'idle')
