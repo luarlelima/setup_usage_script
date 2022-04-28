@@ -125,6 +125,7 @@ def vendor_support_checker():
             print("TeamViewer session is active - reporting 'Vendor Support' status...")
             time.sleep(2)
             publish_setup_status(setup_name, 'vendor_support')
+        # TODO: check for other remote access apps like AnyDesk
 
 
 vendor_support_checker()
@@ -148,6 +149,18 @@ if connection_counter('remoting_host.exe', 7):
 
 
 # automation / manual
+
+def working_hours_test_check():
+    # get current time
+    current_time = datetime.now().time()
+    # if current time between 0:00 and 6:00, report idle
+    late_night = Time(0) < current_time < Time(6)
+    small_hours = Time(22) < current_time < Time(23, 59, 59)
+    if late_night or small_hours:
+        return Fail
+    else:
+        return True
+
 
 def check_connection(source_process_name, destination_process_name,
                      process_iterable, connection_status='ESTABLISHED',
@@ -269,15 +282,11 @@ else:
     sys.exit(1)
 
 # Idle check - do not send "manual" outside working hours
-if not idle_time_check():
-    # get current time
-    current_time = datetime.now().time()
-    # if current time between 0:00 and 6:00, report idle
-    late_night = Time(0) < current_time < Time(6)
-    small_hours = Time(22) < current_time < Time(23,59,59)
-    if late_night or small_hours:
-        pass
-    else:
-        publish_setup_status(setup_name, 'manual')
+if idle_time_check():
+    publish_setup_status(setup_name, 'idle')
 
-publish_setup_status(setup_name, 'idle')
+else:
+    if working_hours_test_check():
+        publish_setup_status(setup_name, 'manual')
+    else:
+        publish_setup_status(setup_name, 'idle')
