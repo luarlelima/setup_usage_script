@@ -71,31 +71,15 @@ elif 'Keysight' in setup_name:
 elif 'RS' in setup_name:
     print('Setup identified as: Rohde-Schwarz.')
 
-
-    def rohde_schwarz_contest_instance_counter():  # check for Rohde-Schwarz test
-        count = 0
-        for process in process_list:
-            if process['name'] == 'RohdeSchwarz.Contest.exe':
-                if process['remote_port'] not in [5442, 9443]:
-                    if process['status'] == 'ESTABLISHED':
-                        count += 1
-            return count
-
-
-    rohde_schwarz_contest_instances = rohde_schwarz_contest_instance_counter()
-    rohde_schwarz_test_running = rohde_schwarz_contest_instances >= 3
-
     # check for automated test
-    rohde_schwarz_automation = su.check_connection('RohdeSchwarz.Contest.exe', 'AutoMgr.exe',
-                                                   process_list, process_port=4754)
+    rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list, process_port=4754)
 
-    if rohde_schwarz_test_running:
-        if rohde_schwarz_automation:
-            print('Rohde-Schwarz setup performing automated testing. Reporting... ')
-            su.publish_setup_status(setup_name, 'automation', api_url)
-        else:
-            print('Rohde-Schwarz setup performing manual testing. Reporting... ')
-            su.publish_setup_status(setup_name, 'manual', api_url)
+    if rohde_schwarz_automation:
+        print('Rohde-Schwarz setup performing automated testing. Reporting... ')
+        su.publish_setup_status(setup_name, 'automation', api_url)
+    else:
+        print('Rohde-Schwarz setup performing manual testing. Reporting... ')
+        su.publish_setup_status(setup_name, 'manual', api_url)
 
 # Vendor check
 else:
