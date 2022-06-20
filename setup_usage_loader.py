@@ -17,6 +17,7 @@ while True:
         file_path = os.path.join(sys.path[0], file_name)
         print(f"Running {file_path} script...")
         subprocess.run(["pythonw", f"{file_path}"])
+        os.system(f"git -C C:\Projects\setup_usage_script pull https://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@github.com/luarlelima/setup_usage_script.git  --rebase --autostash")
         time.sleep(2)
         seconds = int(config['setup_information']['script_loop_time_seconds'])
     except SystemExit:
