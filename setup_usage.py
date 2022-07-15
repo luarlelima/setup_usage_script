@@ -72,8 +72,15 @@ elif 'RS' in setup_name:
         print('Rohde-Schwarz setup performing automated testing. Reporting... ')
         su.publish_setup_status(setup_name, 'automation', api_url)
     else:
-        print('Rohde-Schwarz setup performing manual testing. Reporting... ')
-        su.publish_setup_status(setup_name, 'manual', api_url)
+
+        if su.idle_time_check():
+            su.publish_setup_status(setup_name, 'idle', api_url)
+        else:
+            if su.working_hours_test_check():
+                print('Rohde-Schwarz setup performing manual testing. Reporting... ')
+                su.publish_setup_status(setup_name, 'manual', api_url)
+            else:
+                su.publish_setup_status(setup_name, 'idle', api_url)
 
 # Vendor check
 else:
