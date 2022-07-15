@@ -30,12 +30,6 @@ process_list = su.process_list_generator()
 # Vendor Support
 su.vendor_support_checker(process_list, setup_name, api_url)
 
-# Remote Testing check
-if su.connection_counter(process_list, 'remoting_host.exe', 7):
-    print("Chrome Remote Desktop session is active - reporting 'Remote Test' status...")
-    time.sleep(2)
-    su.publish_setup_status(setup_name, 'manual', api_url)
-
 # Anritsu setup check ########
 if 'Anritsu' in setup_name:
     print('Setup identified as: Anritsu.')
