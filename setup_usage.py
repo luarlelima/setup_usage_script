@@ -65,7 +65,7 @@ elif 'Keysight' in setup_name:
 elif 'RS' in setup_name:
     print('Setup identified as: Rohde-Schwarz.')
 
-    if 'LATIN' in setup_name:
+    if 'LA_RS' in setup_name:
         latin_app_list = [
             'RohdeSchwarz.CMWrun.exe', 'SCPIServer.exe',
             'RohdeSchwarz.CMWrun.Browser.exe', 'RohdeSchwarz.CMWrun.RunningReductionSrv.exe'
