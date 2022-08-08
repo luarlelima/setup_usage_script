@@ -65,7 +65,24 @@ elif 'Keysight' in setup_name:
 elif 'RS' in setup_name:
     print('Setup identified as: Rohde-Schwarz.')
 
-    # check for automated test
+    if 'LATIN' in setup_name:
+        latin_app_list = [
+            'RohdeSchwarz.CMWrun.exe', 'SCPIServer.exe',
+            'RohdeSchwarz.CMWrun.Browser.exe', 'RohdeSchwarz.CMWrun.RunningReductionSrv.exe'
+        ]
+
+        process_match_table = []
+
+        for app in latin_app_list:
+            process_match_table.append(bool(su.process_checker(process_list, app)))
+
+        if all(process_match_table):
+            if su.idle_time_check() or not su.working_hours_test_check():
+                su.publish_setup_status(setup_name, 'automation', api_url)
+            else:
+                su.publish_setup_status(setup_name, 'manual', api_url)
+
+    # else, check for automated test
     rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list, process_port=4754)
 
     if rohde_schwarz_automation:

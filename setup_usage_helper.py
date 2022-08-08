@@ -98,6 +98,13 @@ def vendor_support_checker(process_list, setup_name, api_url):
             publish_setup_status(setup_name, 'vendor_support', api_url)
 
 
+def process_checker(process_list, process_name):
+    for process in process_list:
+        if process["name"] == process_name:  # check for process active session
+            return True
+    return False
+
+
 def connection_counter(process_list, process_name, port_limit):
     port_count = 0
     for process in process_list:
