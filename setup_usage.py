@@ -79,11 +79,10 @@ elif 'RS' in setup_name:
         if all(process_match_table):
             if su.idle_time_check():
                 su.publish_setup_status(setup_name, 'automation', api_url)
-        else:
-            if su.working_hours_test_check():
-                su.publish_setup_status(setup_name, 'manual', api_url)
             else:
-                su.publish_setup_status(setup_name, 'idle', api_url)
+                su.publish_setup_status(setup_name, 'manual', api_url)
+        else:
+            su.publish_setup_status(setup_name, 'idle', api_url)
 
     # else, check for automated test
     rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list, process_port=4754)
