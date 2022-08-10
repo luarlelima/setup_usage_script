@@ -144,7 +144,7 @@ def check_connection(source_process_name, destination_process_name,
         return True
 
 
-def idle_time_check():
+def idle_time_check(milliseconds=1200):
     def get_idle_duration():
 
         class LastInputInfo(Structure):
@@ -159,7 +159,7 @@ def idle_time_check():
         idle_time_milliseconds = windll.kernel32.GetTickCount() - last_input_info.dwTime
         return idle_time_milliseconds / 1000.0
 
-    if get_idle_duration() > 1200:  # 20 minutes timeout
+    if get_idle_duration() > milliseconds:  # 20 minutes timeout
         return True
     else:
         return False
