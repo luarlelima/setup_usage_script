@@ -46,12 +46,19 @@ if 'Anritsu' in setup_name:
 elif 'Keysight' in setup_name:
     print('Setup identified as: Keysight.')
 
-    # check for Keysight test
-    print('Checking for test in Keysight... ')
-    keysight_test_running = su.check_connection('SASLTESequencer.exe', 'AniteAutomationController.exe', process_list)
+    if 'PCAT' in setup_name:
+        # check for Keysight test
+        keysight_test_running = su.process_checker(process_list, 'SAS5GSequencerDriver.exe')
 
-    # check for automated test
-    keysight_automation = su.check_connection('SASTestManager.exe', 'RCMISvr.exe', process_list)
+        # check for automated test
+        keysight_automation = su.check_connection('TestManager.exe', 'RCMISvr.exe', process_list)
+    else:
+        # check for Keysight test
+        print('Checking for test in Keysight... ')
+        keysight_test_running = su.check_connection('SASLTESequencer.exe', 'AniteAutomationController.exe', process_list)
+
+        # check for automated test
+        keysight_automation = su.check_connection('SASTestManager.exe', 'RCMISvr.exe', process_list)
 
     if keysight_test_running:
         if keysight_automation:
