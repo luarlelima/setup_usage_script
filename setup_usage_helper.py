@@ -144,6 +144,15 @@ def check_connection(source_process_name, destination_process_name,
         return True
 
 
+def check_remote_connection(source_process_name, process_iterable,
+                            connection_status='ESTABLISHED', remote_process_port=None):
+    # get source_process and destination_process connections from process list
+    for process in process_iterable:
+        if process['name'] == source_process_name and process['status'] == connection_status and process['remote_port'] == remote_process_port:
+            return True
+    return False
+
+
 def idle_time_check(milliseconds=1200):
     def get_idle_duration():
 

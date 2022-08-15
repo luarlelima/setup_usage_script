@@ -72,7 +72,8 @@ elif 'Keysight' in setup_name:
 elif 'RS' in setup_name:
     print('Setup identified as: Rohde-Schwarz.')
 
-    if 'LA_RS' in setup_name:
+    if 'LA' in setup_name:
+        print('LATIN setup.')
         latin_app_list = [
             'RohdeSchwarz.CMWrun.exe', 'SCPIServer.exe',
             'RohdeSchwarz.CMWrun.Browser.exe', 'RohdeSchwarz.CMWrun.RunningReductionSrv.exe'
@@ -88,7 +89,13 @@ elif 'RS' in setup_name:
                 su.publish_setup_status(setup_name, 'automation', api_url)
             else:
                 su.publish_setup_status(setup_name, 'manual', api_url)
+
         else:
+            if 'MOS' in setup_name:
+                rohde_schwarz_automation = su.check_remote_connection('java.exe', process_list, remote_process_port=4754)
+                if rohde_schwarz_automation:
+                    print('Rohde-Schwarz setup performing automated testing. Reporting... ')
+                    su.publish_setup_status(setup_name, 'automation', api_url)
             if su.idle_time_check():
                 su.publish_setup_status(setup_name, 'idle', api_url)
             else:
