@@ -51,7 +51,7 @@ elif 'Keysight' in setup_name:
         keysight_test_running = su.process_checker(process_list, 'SAS5GSequencerDriver.exe')
 
         # check for automated test
-        keysight_automation = su.check_connection('TestManager.exe', 'RCMISvr.exe', process_list)
+        keysight_automation = su.check_connection('TestManager.exe', 'RCMISvr.exe', process_list) or su.check_remote_connection('SAS5GSequencer.exe', process_list, remote_process_port=6667)
     else:
         # check for Keysight test
         print('Checking for test in Keysight... ')
