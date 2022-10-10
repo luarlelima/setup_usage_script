@@ -5,7 +5,6 @@ import sys
 import time
 
 import setup_usage_helper as su
-
 # config file setup
 config = configparser.ConfigParser()
 # read config file from same directory
