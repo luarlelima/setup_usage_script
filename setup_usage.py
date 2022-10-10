@@ -5,6 +5,7 @@ import sys
 import time
 
 import setup_usage_helper as su
+
 # config file setup
 config = configparser.ConfigParser()
 # read config file from same directory
@@ -50,11 +51,15 @@ elif 'Keysight' in setup_name:
         keysight_test_running = su.process_checker(process_list, 'SAS5GSequencerDriver.exe')
 
         # check for automated test
-        keysight_automation = su.check_connection('TestManager.exe', 'RCMISvr.exe', process_list) or su.check_remote_connection('SAS5GSequencer.exe', process_list, remote_process_port=6667)
+        keysight_automation = su.check_connection('TestManager.exe', 'RCMISvr.exe',
+                                                  process_list) or su.check_remote_connection('SAS5GSequencer.exe',
+                                                                                              process_list,
+                                                                                              remote_process_port=6667)
     else:
         # check for Keysight test
         print('Checking for test in Keysight... ')
-        keysight_test_running = su.check_connection('SASLTESequencer.exe', 'AniteAutomationController.exe', process_list)
+        keysight_test_running = su.check_connection('SASLTESequencer.exe', 'AniteAutomationController.exe',
+                                                    process_list)
 
         # check for automated test
         keysight_automation = su.check_connection('SASTestManager.exe', 'RCMISvr.exe', process_list)
@@ -91,7 +96,8 @@ elif 'RS' in setup_name:
 
         else:
             if 'MOS' in setup_name:
-                rohde_schwarz_automation = su.check_remote_connection('java.exe', process_list, remote_process_port=4754)
+                rohde_schwarz_automation = su.check_remote_connection('java.exe', process_list,
+                                                                      remote_process_port=4754)
                 if rohde_schwarz_automation:
                     print('Rohde-Schwarz setup performing automated testing. Reporting... ')
                     su.publish_setup_status(setup_name, 'automation', api_url)
@@ -104,7 +110,8 @@ elif 'RS' in setup_name:
                     su.publish_setup_status(setup_name, 'idle', api_url)
 
     # else, check for automated test
-    rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list, process_port=4754)
+    rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list, process_port=4754) or \
+                               su.check_connection('AutoMgr.exe', 'RohdeSchwarz.Contest.exe', process_list, process_port=4754)
 
     if rohde_schwarz_automation:
         print('Rohde-Schwarz setup performing automated testing. Reporting... ')
