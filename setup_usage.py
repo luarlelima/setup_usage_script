@@ -96,8 +96,10 @@ elif 'RS' in setup_name:
 
         else:
             if 'MOS' in setup_name:
-                rohde_schwarz_automation = su.check_remote_connection('java.exe', process_list,
-                                                                      remote_process_port=4754)
+                rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list,
+                                                               process_port=4754) or \
+                                           su.check_connection('AutoMgr.exe', 'RohdeSchwarz.Contest.exe', process_list,
+                                                               process_port=4754)
                 if rohde_schwarz_automation:
                     print('Rohde-Schwarz setup performing automated testing. Reporting... ')
                     su.publish_setup_status(setup_name, 'automation', api_url)
