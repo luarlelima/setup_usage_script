@@ -9,14 +9,14 @@ import psutil
 import requests
 
 
-def installed_apps_list_generator():
+def installed_apps_list_generator():  # generates a list with all running installed apps
     app_list = []
     for app in winapps.list_installed():
         app_list.append(app)
     return app_list
 
 
-def process_list_generator():
+def process_list_generator():  # generates a nested list with all system running processes info
     proc_list = []
     for i in psutil.net_connections():
         try:
@@ -56,7 +56,7 @@ def process_list_generator():
     return proc_list
 
 
-def publish_setup_status(name, status, url):  # publish results
+def publish_setup_status(name, status, url):  # publish results into Setup Usage API
     # datetime
     print_date = datetime.today().strftime('%Y-%m-%d')
     print_time = datetime.today().strftime('%H:%M:%S')
@@ -70,11 +70,11 @@ def publish_setup_status(name, status, url):  # publish results
                    '\n')
     print('Setup status written to setup_usage.dat file.')
 
-    # publish into remote API
     # get request domain URL from ini
     full_url = url + f'setupName={name}&setupStatus={status}'
     print(f'API request URL: {full_url}')
 
+    # publish into remote API
     try:
         response = requests.get(full_url)
         if response.status_code == 200:
@@ -85,27 +85,18 @@ def publish_setup_status(name, status, url):  # publish results
         traceback.print_exc()
 
     # generate request from parameters
-
     time.sleep(2)
     sys.exit(0)
 
 
-def vendor_support_checker(process_list, setup_name, api_url):
-    for process in process_list:
-        if process["name"] == "TeamViewer_Desktop.exe":  # if TeamViewer active session
-            print("TeamViewer session is active - reporting 'Vendor Support' status...")
-            time.sleep(2)
-            publish_setup_status(setup_name, 'vendor_support', api_url)
-
-
-def process_checker(process_list, process_name):
+def process_checker(process_list, process_name):  # checks if specific process is running
     for process in process_list:
         if process["name"] == process_name:  # check for process active session
             return True
     return False
 
 
-def connection_counter(process_list, process_name, port_limit):
+def connection_counter(process_list, process_name, port_limit):  # checks instances of a passed process
     port_count = 0
     for process in process_list:
         if process["name"] == process_name:  # check for process active session
@@ -116,7 +107,7 @@ def connection_counter(process_list, process_name, port_limit):
 
 def check_connection(source_process_name, destination_process_name,
                      process_iterable, connection_status='ESTABLISHED',
-                     process_port=None):
+                     process_port=None):  # checks if two different processes are connected to each other
     l_ports = []
     r_ports = []
     # get source_process and destination_process connections from process list
@@ -145,15 +136,18 @@ def check_connection(source_process_name, destination_process_name,
 
 
 def check_remote_connection(source_process_name, process_iterable,
-                            connection_status='ESTABLISHED', remote_process_port=None):
-    # get source_process and destination_process connections from process list
-    for process in process_iterable:
-        if process['name'] == source_process_name and process['status'] == connection_status and process['remote_port'] == remote_process_port:
+                            connection_status='ESTABLISHED', remote_process_port=None):  # checks if a process is
+    # connected to a different machine in the network
+
+    for process in process_iterable:  # get source_process and destination_process connections from process list
+        if process['name'] == source_process_name\
+                and process['status'] == connection_status\
+                and process['remote_port'] == remote_process_port:
             return True
     return False
 
 
-def idle_time_check(milliseconds=1200):
+def idle_time_check(milliseconds=1200):  # check for system idle time in Windows OS
     def get_idle_duration():
 
         class LastInputInfo(Structure):
@@ -174,7 +168,7 @@ def idle_time_check(milliseconds=1200):
         return False
 
 
-def working_hours_test_check():
+def working_hours_test_check():  # checks if time not between 22pm-6am
     # get current time
     current_time = datetime.now().time()
     # if current time between 0:00 and 6:00, report idle

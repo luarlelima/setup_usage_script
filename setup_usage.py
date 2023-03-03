@@ -23,30 +23,27 @@ print('done.')
 
 # collect system process/pid/connections and save as process_list
 print('Generating list of system connections... ', end='')
-
-print('done.')
 process_list = su.process_list_generator()
+print('done.')
 
-# Vendor Support
-su.vendor_support_checker(process_list, setup_name, api_url)
-
-# Anritsu setup check ########
+# Anritsu setup check
 if 'Anritsu' in setup_name:
     print('Setup identified as: Anritsu.')
 
     # check for Anritsu (automated) test
     print('Checking for test in Anritsu... ')
+    # Anritsu RTD opens 6 Java process instances in background
     anritsu_automation = su.connection_counter(process_list, 'java.exe', 6)
 
     if anritsu_automation:
         print('Anritsu setup performing automated testing. Reporting... ')
         su.publish_setup_status(setup_name, 'automation', api_url)
 
-# Keysight setup check ########
+# Keysight setup check
 elif 'Keysight' in setup_name:
     print('Setup identified as: Keysight.')
 
-    if 'PCAT' in setup_name:
+    if 'PCAT' in setup_name:  # Keysight UXM 5G for Latin/AT&T
         # check for Keysight test
         keysight_test_running = su.process_checker(process_list, 'SAS5GSequencerDriver.exe')
 
@@ -72,10 +69,11 @@ elif 'Keysight' in setup_name:
             print('Keysight setup performing manual testing. Reporting... ')
             su.publish_setup_status(setup_name, 'manual', api_url)
 
-# Rohde-Schwarz check ########
+# Rohde-Schwarz setup check
 elif 'RS' in setup_name:
     print('Setup identified as: Rohde-Schwarz.')
 
+    # CMWRun testing
     if 'LA' in setup_name:
         print('LATIN setup.')
         latin_app_list = [
@@ -95,6 +93,7 @@ elif 'RS' in setup_name:
                 su.publish_setup_status(setup_name, 'manual', api_url)
 
         else:
+            # CONTEST testing
             if 'MOS' in setup_name:
                 rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list,
                                                                process_port=4754) or \
@@ -130,10 +129,11 @@ elif 'RS' in setup_name:
                 su.publish_setup_status(setup_name, 'idle', api_url)
 
 # Vendor check
-else:
+else:  # No recognized vendor
     print("Unrecognized setup")
     su.publish_setup_status(setup_name, 'unrecognized_setup', api_url)
     sys.exit(1)
+
 # Idle check - do not send "manual" outside working hours
 if su.idle_time_check():
     su.publish_setup_status(setup_name, 'idle', api_url)
