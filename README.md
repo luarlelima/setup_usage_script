@@ -8,6 +8,21 @@ Copy project folder, run with Python 3.7+
 
 Install dependencies from requirements.txt (mainly psutil, requests, winapps)
 
+Define a system environment variable named 'setup_name' containing the setup name.
+
+ATLAS uses the following format: 
+<three-letter carrier acronym>_<vendor>_<setup_identifier_plus_extras>
+
+Examples:
+
+ATT_Keysight_2
+
+TMO_Anritsu_IMS
+
+LA_RS_TDD
+
+TMO_RS_PQA_LTE_DP
+
 ## Usage
 
 Set up a shortcut into Windows startup apps containing:
@@ -18,7 +33,7 @@ Set up a shortcut into Windows startup apps containing:
 
 ## Limitations
 
-Application meant for Windows clients
+Windows support only
 
 ## Contact
 
