@@ -153,5 +153,5 @@ while True:
         setup_usage_report()
     except SystemExit:
         pass
-    print(f'Waiting 10 seconds...')
-    time.sleep(10)
+    print(f'Waiting 60 seconds...')
+    time.sleep(60)
