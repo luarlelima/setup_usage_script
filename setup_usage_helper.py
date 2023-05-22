@@ -81,6 +81,13 @@ def publish_setup_status(name, status, url):  # publish results into Setup Usage
             print('Request successful.')
     except requests.exceptions.ConnectionError as error_message:
         print('Request failed.')
+        with open('offline_setup_usage.dat', 'a+') as file:
+            file.write(f'Setup name: {name}\t'
+                       f'Setup status: {status}\t'
+                       f'Date: {print_date}\t'
+                       f'Time: {print_time}\t'
+                       '\n')
+        print('Setup status written to offline_setup_usage.dat file.')
         print(error_message)
         traceback.print_exc()
 
