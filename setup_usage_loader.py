@@ -16,7 +16,7 @@ while True:
     try:
         file_path = os.path.join(sys.path[0], file_name)
         print(f"Running {file_path} script...")
-        subprocess.run(["pythonw", f"{file_path}"])
+        subprocess.run([r"C:\Projects\setup_usage_script\venv\Scripts\pythonw.exe", f"{file_path}"])
         time.sleep(2)
         seconds = int(config['setup_information']['script_loop_time_seconds'])
     except SystemExit:
