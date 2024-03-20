@@ -16,11 +16,6 @@ setup_name = os.getenv('SETUP_NAME')
 
 
 def setup_usage_report():
-    # get list of installed apps
-    print('Generating list of installed apps... ', end='')
-    installed_apps = su.installed_apps_list_generator()
-    print('done.')
-
     # collect system process/pid/connections and save as process_list
     print('Generating list of system connections... ', end='')
     process_list = su.process_list_generator()

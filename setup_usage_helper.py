@@ -6,14 +6,6 @@ from datetime import datetime, time as Time
 
 import psutil
 import requests
-import winapps
-
-
-def installed_apps_list_generator():  # generates a list with all running installed apps
-    app_list = []
-    for app in winapps.list_installed():
-        app_list.append(app)
-    return app_list
 
 
 def process_list_generator():
