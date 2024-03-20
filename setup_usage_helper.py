@@ -1,12 +1,12 @@
-from datetime import datetime, time as Time
-from ctypes import Structure, windll, c_uint, sizeof, byref
-import time
 import sys
-
+import time
 import traceback
-import winapps
+from ctypes import Structure, windll, c_uint, sizeof, byref
+from datetime import datetime, time as Time
+
 import psutil
 import requests
+import winapps
 
 
 def installed_apps_list_generator():  # generates a list with all running installed apps
@@ -16,44 +16,46 @@ def installed_apps_list_generator():  # generates a list with all running instal
     return app_list
 
 
-def process_list_generator():  # generates a nested list with all system running processes info
-    proc_list = []
-    for i in psutil.net_connections():
-        try:
-            process_name = psutil.Process(i.pid).name()
-            process_pid = i.pid
+def process_list_generator():
+    """
+    Generate a list of dictionaries containing information about running processes and their connections.
 
-            if len(i.laddr) == 0:
-                local_ip = i.laddr
-                local_port = i.laddr
-            else:
-                local_ip = i.laddr.ip
-                local_port = i.laddr.port
+    Returns:
+        list: A list of dictionaries where each dictionary contains the following keys:
+            - "name": Name of the process.
+            - "pid": Process ID.
+            - "local_ip": Local IP address of the connection, or None if not applicable.
+            - "local_port": Local port of the connection, or None if not applicable.
+            - "remote_ip": Remote IP address of the connection, or None if not applicable.
+            - "remote_port": Remote port of the connection, or None if not applicable.
+            - "status": Connection status.
 
-            if len(i.raddr) == 0:
-                remote_ip = i.raddr
-                remote_port = i.raddr
-            else:
-                remote_ip = i.raddr.ip
-                remote_port = i.raddr.port
+    Note:
+        If a process cannot be found, it is skipped and not included in the final list.
+    """
+    processes = []
+    try:
+        for connection in psutil.net_connections():
+            process_name = psutil.Process(connection.pid).name()
+            process_pid = connection.pid
+            local_ip = connection.laddr.ip if connection.laddr else None
+            local_port = connection.laddr.port if connection.laddr else None
+            remote_ip = connection.raddr.ip if connection.raddr else None
+            remote_port = connection.raddr.port if connection.raddr else None
+            status = connection.status
 
-            status = i.status
-
-            proc_list.append(
-                {
-                    "name": process_name,
-                    "pid": process_pid,
-                    "local_ip": local_ip,
-                    "local_port": local_port,
-                    "remote_ip": remote_ip,
-                    "remote_port": remote_port,
-                    "status": status
-                }
-            )
-
-        except psutil.NoSuchProcess:
-            continue
-    return proc_list
+            processes.append({
+                "name": process_name,
+                "pid": process_pid,
+                "local_ip": local_ip,
+                "local_port": local_port,
+                "remote_ip": remote_ip,
+                "remote_port": remote_port,
+                "status": status
+            })
+    except psutil.NoSuchProcess:
+        pass  # Handle NoSuchProcess exception if required
+    return processes
 
 
 def publish_setup_status(name, status, url):  # publish results into Setup Usage API
@@ -147,8 +149,8 @@ def check_remote_connection(source_process_name, process_iterable,
     # connected to a different machine in the network
 
     for process in process_iterable:  # get source_process and destination_process connections from process list
-        if process['name'] == source_process_name\
-                and process['status'] == connection_status\
+        if process['name'] == source_process_name \
+                and process['status'] == connection_status \
                 and process['remote_port'] == remote_process_port:
             return True
     return False
