@@ -4,138 +4,107 @@ import sys
 
 import setup_usage_helper as su
 
-# config file setup
-config = configparser.ConfigParser()
-# read config file from same directory
-config.read(os.path.join(os.path.dirname(__file__), 'setup_usage.ini'))
-# read server URL from config file
-api_url = config['setup_information']['api']
 
-# get equipment name
-setup_name = os.getenv('SETUP_NAME')
+def read_config():
+    # Read configuration file
+    config = configparser.ConfigParser()
+    config.read(os.path.join(os.path.dirname(__file__), 'setup_usage.ini'))
+    return config
 
 
-def setup_usage_report():
-    # collect system process/pid/connections and save as process_list
-    print('Generating list of system connections... ', end='')
-    process_list = su.process_list_generator()
-    print('done.')
+def get_setup_name():
+    # Get setup name from environment variable
+    return os.getenv('SETUP_NAME')
 
-    # Anritsu setup check
+
+def check_anritsu(process_list):
+    # Check for Anritsu setup and automated test
     if 'Anritsu' in setup_name:
         print('Setup identified as: Anritsu.')
-
-        # check for Anritsu (automated) test
-        print('Checking for test in Anritsu... ')
-        # Anritsu RTD opens 6 Java process instances in background
         anritsu_automation = su.connection_counter(process_list, 'java.exe', 6)
-
         if anritsu_automation:
-            print('Anritsu setup performing automated testing. Reporting... ')
+            print('Anritsu setup performing automated testing. Reporting...')
             su.publish_setup_status(setup_name, 'automation', api_url)
 
-    # Keysight setup check
-    elif 'Keysight' in setup_name:
+
+def check_keysight(process_list):
+    # Check for Keysight setup and test type
+    if 'Keysight' in setup_name:
         print('Setup identified as: Keysight.')
-
-        if 'PCAT' in setup_name:  # Keysight UXM 5G for Latin/AT&T
-            # check for Keysight test
+        if 'PCAT' in setup_name:
             keysight_test_running = su.process_checker(process_list, 'SAS5GSequencerDriver.exe')
-
-            # check for automated test
-            keysight_automation = su.check_connection('TestManager.exe', 'RCMISvr.exe',
-                                                      process_list) or su.check_remote_connection('SAS5GSequencer.exe',
-                                                                                                  process_list,
-                                                                                                  remote_process_port=6667)
         else:
-            # check for Keysight test
-            print('Checking for test in Keysight... ')
             keysight_test_running = su.check_connection('SASLTESequencer.exe', 'AniteAutomationController.exe',
                                                         process_list)
 
-            # check for automated test
-            keysight_automation = su.check_connection('SASTestManager.exe', 'RCMISvr.exe', process_list)
-
         if keysight_test_running:
-            if keysight_automation:
-                print('Keysight setup performing automated testing. Reporting... ')
-                su.publish_setup_status(setup_name, 'automation', api_url)
-            else:
-                print('Keysight setup performing manual testing. Reporting... ')
-                su.publish_setup_status(setup_name, 'manual', api_url)
+            keysight_automation = su.check_connection('SASTestManager.exe', 'RCMISvr.exe', process_list)
+            test_type = 'automation' if keysight_automation else 'manual'
+            print(f'Keysight setup performing {test_type} testing. Reporting...')
+            su.publish_setup_status(setup_name, test_type, api_url)
 
-    # Rohde-Schwarz setup check
-    elif 'RS' in setup_name:
+
+def check_rohde_schwarz(process_list):
+    # Check for Rohde-Schwarz setup and test type
+    if 'RS' in setup_name:
         print('Setup identified as: Rohde-Schwarz.')
-
-        # CMWRun testing
-        if 'LA' in setup_name:
-            print('LATIN setup.')
-            latin_app_list = [
-                'RohdeSchwarz.CMWrun.exe', 'SCPIServer.exe',
-                'RohdeSchwarz.CMWrun.Browser.exe', 'RohdeSchwarz.CMWrun.RunningReductionSrv.exe'
-            ]
-
-            process_match_table = []
-
-            for app in latin_app_list:
-                process_match_table.append(bool(su.process_checker(process_list, app)))
-
-            if all(process_match_table):
-                if su.idle_time_check():
-                    su.publish_setup_status(setup_name, 'automation', api_url)
-                else:
-                    su.publish_setup_status(setup_name, 'manual', api_url)
-
-            else:
-                # CONTEST testing
-                if 'MOS' in setup_name:
-                    rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list,
-                                                                   process_port=4754) or \
-                                               su.check_connection('AutoMgr.exe', 'RohdeSchwarz.Contest.exe',
-                                                                   process_list,
-                                                                   process_port=4754)
-                    if rohde_schwarz_automation:
-                        print('Rohde-Schwarz setup performing automated testing. Reporting... ')
-                        su.publish_setup_status(setup_name, 'automation', api_url)
-                if su.idle_time_check():
-                    su.publish_setup_status(setup_name, 'idle', api_url)
-                else:
-                    if su.working_hours_test_check():
-                        su.publish_setup_status(setup_name, 'manual', api_url)
-                    else:
-                        su.publish_setup_status(setup_name, 'idle', api_url)
-
-        # else, check for automated test
         rohde_schwarz_automation = su.check_connection('AutoMgr.exe', 'java.exe', process_list, process_port=4754) or \
                                    su.check_connection('AutoMgr.exe', 'RohdeSchwarz.Contest.exe', process_list,
                                                        process_port=4754)
 
         if rohde_schwarz_automation:
-            print('Rohde-Schwarz setup performing automated testing. Reporting... ')
+            print('Rohde-Schwarz setup performing automated testing. Reporting...')
             su.publish_setup_status(setup_name, 'automation', api_url)
         else:
+            test_type = 'manual' if su.working_hours_test_check() else 'idle'
+            print(f'Rohde-Schwarz setup performing {test_type} testing. Reporting...')
+            su.publish_setup_status(setup_name, test_type, api_url)
 
-            if su.idle_time_check():
-                su.publish_setup_status(setup_name, 'idle', api_url)
-            else:
-                if su.working_hours_test_check():
-                    print('Rohde-Schwarz setup performing manual testing. Reporting... ')
-                    su.publish_setup_status(setup_name, 'manual', api_url)
-                else:
-                    su.publish_setup_status(setup_name, 'idle', api_url)
 
-    # Vendor check
-    else:  # No recognized vendor
+def check_vendor(process_list):
+    # Check for unrecognized vendor
+    if not any(vendor in setup_name for vendor in ['Anritsu', 'Keysight', 'RS']):
         print("Unrecognized setup")
         su.publish_setup_status(setup_name, 'unrecognized_setup', api_url)
         sys.exit(1)
 
-    # Idle check - do not send "manual" outside working hours
+
+def setup_usage_report():
+    # Read config and setup name
+    config = read_config()
+    global api_url
+    api_url = config['setup_information']['api']
+    global setup_name
+    setup_name = get_setup_name()
+
+    # Collect system process/pid/connections and save as process_list
+    print('Generating list of system connections... ', end='')
+    process_list = su.process_list_generator()
+    print('done.')
+
+    # Check for Anritsu setup
+    check_anritsu(process_list)
+
+    # Check for Keysight setup
+    check_keysight(process_list)
+
+    # Check for Rohde-Schwarz setup
+    check_rohde_schwarz(process_list)
+
+    # Check for unrecognized vendor
+    check_vendor(process_list)
+
+    # Determine setup state based on idle time and working hours
     if su.idle_time_check():
-        su.publish_setup_status(setup_name, 'idle', api_url)
+        setup_state = 'idle'
+    elif su.working_hours_test_check():
+        setup_state = 'manual'
     else:
-        if su.working_hours_test_check():
-            su.publish_setup_status(setup_name, 'manual', api_url)
-        else:
-            su.publish_setup_status(setup_name, 'idle', api_url)
+        setup_state = 'idle'
+
+    # Publish setup status with determined setup state
+    su.publish_setup_status(setup_name, setup_state, api_url)
+
+
+if __name__ == "__main__":
+    setup_usage_report()
