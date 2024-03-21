@@ -1,3 +1,4 @@
+import re
 import sys
 import time
 import traceback
@@ -50,28 +51,86 @@ def process_list_generator():
 
 
 def publish_setup_status(name, status, url):
-    # Get current date and time
+    """
+    Publishes setup status to a remote API and handles retrying failed requests from offline_setup_usage.dat.
+
+    Args:
+        name (str): The name of the setup.
+        status (str): The status of the setup.
+        url (str): The URL of the remote API.
+
+    Returns:
+        None
+    """
+
+    def retry_failed_requests():
+        """
+        Retry failed requests stored in offline_setup_usage.dat.
+
+        Returns:
+            None
+        """
+        try:
+            with open('offline_setup_usage.dat', 'r+') as file:
+                lines = file.readlines()
+                file.seek(0)
+
+                for request_data in lines:
+                    match = re.match(
+                        r'Setup name: (\w+)\tSetup status: (\w+)\tDate: (\d{4}-\d{2}-\d{2})\tTime: (\d{2}:\d{2}:\d{2})',
+                        request_data)
+                    if match:
+                        setup_name = match.group(1)
+                        setup_status = match.group(2)
+                        date = match.group(3)
+                        time = match.group(4)
+                        timestamp = f'{date.replace("-", "_")}-{time.replace(":", "-")}'
+
+                        full_url = f'{url}?setupName={setup_name}&setupStatus={setup_status}&timestamp={timestamp}'
+                        print(f'API retry request URL: {full_url}')
+                        response = requests.get(full_url)
+
+                        if response.status_code == 200:
+                            print('Retried request successful.')
+                        else:
+                            print('Retry failed. Stopping processing offline_setup_usage.dat.')
+                            file.write(request_data)  # Rewrite the line if retry failed
+                    else:
+                        print("No match found for line:", request_data)
+
+                file.truncate()  # Truncate the file to remove any remaining lines after processing
+
+        except Exception as e:
+            print('Failed to retry requests:', e)
+            traceback.print_exc()
+
+    # Get current date and time before the try block to ensure they are always assigned
     print_date = datetime.today().strftime('%Y-%m-%d')
     print_time = datetime.today().strftime('%H:%M:%S')
 
-    # Save setup status into a file for testing purposes
-    with open('setup_usage.dat', 'a+') as file:
-        file.write(f'Setup name: {name}\t'
-                   f'Setup status: {status}\t'
-                   f'Date: {print_date}\t'
-                   f'Time: {print_time}\t'
-                   '\n')
-    print('Setup status written to setup_usage.dat file.')
-
-    # Generate API request URL
-    full_url = f'{url}?setupName={name}&setupStatus={status}'
-    print(f'API request URL: {full_url}')
-
-    # Publish into the remote API
     try:
+        # Save setup status into a file for testing purposes
+        with open('setup_usage.dat', 'a+') as file:
+            file.write(f'Setup name: {name}\t'
+                       f'Setup status: {status}\t'
+                       f'Date: {print_date}\t'
+                       f'Time: {print_time}\t'
+                       '\n')
+        print('Setup status written to setup_usage.dat file.')
+
+        # Generate API request URL
+        timestamp = datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
+        full_url = f'{url}?setupName={name}&setupStatus={status}&timestamp={timestamp}'
+        print(f'API request URL: {full_url}')
+
+        # Publish into the remote API
         response = requests.get(full_url)
         if response.status_code == 200:
             print('Request successful.')
+
+            # Retry failed requests from offline_setup_usage.dat if any
+            retry_failed_requests()
+
     except requests.exceptions.RequestException as e:
         print('Request failed.')
         with open('offline_setup_usage.dat', 'a+') as file:
