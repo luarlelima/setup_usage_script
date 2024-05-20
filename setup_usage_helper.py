@@ -50,6 +50,14 @@ def process_list_generator():
     return processes
 
 
+import requests
+import re
+import traceback
+import time
+import sys
+from datetime import datetime
+
+
 def publish_setup_status(name, status, url):
     """
     Publishes setup status to a remote API and handles retrying failed requests from offline_setup_usage.dat.
@@ -93,7 +101,11 @@ def publish_setup_status(name, status, url):
                         if response.status_code == 200:
                             print('Retried request successful.')
                         else:
-                            print('Retry failed. Stopping processing offline_setup_usage.dat.')
+                            if response.status_code == 500:
+                                print('Retry failed with status code 500. Error message:', response.text)
+                            else:
+                                print('Retry failed with status code:', response.status_code)
+                            print('Stopping processing offline_setup_usage.dat.')
                             file.write(request_data)  # Rewrite the line if retry failed
                     else:
                         print("No match found for line:", request_data)
@@ -120,7 +132,7 @@ def publish_setup_status(name, status, url):
 
         # Generate API request URL
         timestamp = datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
-        full_url = f'{url}?setupName={name}&setupStatus={status}&timestamp={timestamp}'
+        full_url = f'{url}?setupName={name}&setupStatus={status}'
         print(f'API request URL: {full_url}')
 
         # Publish into the remote API
@@ -130,6 +142,8 @@ def publish_setup_status(name, status, url):
 
             # Retry failed requests from offline_setup_usage.dat if any
             retry_failed_requests()
+        else:
+            print(f'Request failed with status code {response.status_code}. Error message:', response.text)
 
     except requests.exceptions.RequestException as e:
         print('Request failed.')
@@ -243,12 +257,12 @@ def check_remote_connection(source_process_name, process_iterable,
     return False  # Connection not found
 
 
-def idle_time_check(milliseconds=1200):
+def idle_time_check(seconds=1200):
     """
     Checks for system idle time in Windows OS.
 
-    Args: milliseconds (int): The threshold for considering the system idle, in milliseconds. Default is 1200 (20
-    minutes).
+    Args:
+        seconds (int): The threshold for considering the system idle, in seconds. Default is 1200 (20 minutes).
 
     Returns:
         bool: True if the system is idle for longer than the specified threshold, False otherwise.
@@ -282,7 +296,7 @@ def idle_time_check(milliseconds=1200):
         return idle_time_milliseconds / 1000.0
 
     # Check if idle duration exceeds the specified threshold
-    return get_idle_duration() > milliseconds / 1000.0
+    return get_idle_duration() > seconds
 
 
 def working_hours_test_check():
